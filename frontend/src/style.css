@@ -1,77 +1,175 @@
 :root {
-  --primary: #4f46e5;
-  --primary-hover: #4338ca;
-  --surface-1: #ffffff;
-  --surface-2: #f8fafc;
-  --text-main: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #94a3b8;
-  --border: #e2e8f0;
-  --bg-body: #f1f5f9;
-  --danger: #ef4444;
-  --success: #10b981;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --primary: #6366f1;
-    --primary-hover: #818cf8;
-    --surface-1: #0f172a;
-    --surface-2: #1e293b;
-    --text-main: #f8fafc;
-    --text-secondary: #cbd5e1;
-    --text-muted: #64748b;
-    --border: #334155;
-    --bg-body: #020617;
-  }
+  --bg-primary: #07050f;
+  --bg-secondary: rgba(18, 15, 32, 0.75);
+  --text-primary: #ffffff;
+  --text-secondary: #b0a9cd;
+  --accent-pink: #ff2e93;
+  --accent-cyan: #00f6ff;
+  --border-color: rgba(255, 46, 147, 0.2);
+  --glass-border: rgba(255, 255, 255, 0.08);
 }
 
 body {
-  background-color: var(--bg-body);
-  color: var(--text-main);
-  font-family: 'Inter', system-ui, sans-serif;
-  transition: background-color 0.3s, color 0.3s;
-}
-
-/* Glassmorphism helpers */
-.glass-card {
-  background: var(--surface-1);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  backdrop-filter: blur(10px);
-}
-
-.btn-premium {
-  background: linear-gradient(135deg, var(--primary), var(--primary-hover));
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 0.5rem 1rem;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.btn-premium:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
-  color: white;
-}
-
-.form-control-premium {
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  color: var(--text-main);
-  border-radius: 8px;
-}
-
-.form-control-premium:focus {
-  background: var(--surface-1);
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
-  color: var(--text-main);
+  background-color: var(--bg-primary);
+  background-image: radial-gradient(circle at 10% 20%, rgba(255, 46, 147, 0.08) 0%, transparent 40%),
+                    radial-gradient(circle at 90% 80%, rgba(0, 246, 255, 0.06) 0%, transparent 40%);
+  color: var(--text-primary);
+  font-family: 'Outfit', sans-serif;
+  min-height: 100vh;
 }
 
 h1, h2, h3, h4, h5, h6 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, var(--text-primary) 30%, var(--accent-pink) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.card {
+  background: var(--bg-secondary);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 40px 0 rgba(255, 46, 147, 0.15);
+  border-color: var(--accent-pink);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent-pink) 0%, #d80064 100%);
+  border: none;
+  color: #fff;
   font-weight: 600;
-  letter-spacing: -0.025em;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(255, 46, 147, 0.3);
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover, .btn-primary:focus {
+  background: linear-gradient(135deg, #ff55a8 0%, var(--accent-pink) 100%);
+  box-shadow: 0 6px 20px rgba(255, 46, 147, 0.5);
+  transform: translateY(-1px);
+}
+
+.btn-outline-primary {
+  color: var(--accent-cyan);
+  border-color: var(--accent-cyan);
+  background: transparent;
+  font-weight: 600;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0, 246, 255, 0.1);
+  transition: all 0.2s ease;
+}
+
+.btn-outline-primary:hover {
+  background: var(--accent-cyan);
+  border-color: var(--accent-cyan);
+  color: #07050f;
+  box-shadow: 0 6px 20px rgba(0, 246, 255, 0.4);
+}
+
+.btn-success {
+  background: linear-gradient(135deg, var(--accent-cyan) 0%, #00b4d8 100%);
+  border: none;
+  color: #07050f;
+  font-weight: 600;
+  box-shadow: 0 4px 15px rgba(0, 246, 255, 0.25);
+}
+
+.btn-success:hover {
+  background: linear-gradient(135deg, #33f8ff 0%, var(--accent-cyan) 100%);
+  color: #07050f;
+  box-shadow: 0 6px 20px rgba(0, 246, 255, 0.4);
+}
+
+.form-control, .form-select {
+  background-color: rgba(22, 19, 38, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: var(--text-primary);
+  border-radius: 10px;
+}
+
+.form-control::placeholder {
+  color: rgba(255, 255, 255, 0.5) !important;
+  opacity: 1;
+}
+
+.form-label, label {
+  color: #e2ddf7 !important;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+}
+
+.form-control:focus, .form-select:focus {
+  background-color: rgba(22, 19, 38, 1);
+  border-color: var(--accent-pink);
+  color: var(--text-primary);
+  box-shadow: 0 0 0 0.25rem rgba(255, 46, 147, 0.3);
+}
+
+.nav-link {
+  color: var(--text-secondary);
+  font-weight: 600;
+  border-radius: 12px !important;
+  transition: all 0.2s ease;
+}
+
+.nav-link:hover {
+  color: var(--accent-pink);
+  background-color: rgba(255, 46, 147, 0.05);
+}
+
+.nav-pills .nav-link.active {
+  background: linear-gradient(135deg, var(--accent-pink) 0%, #d80064 100%) !important;
+  color: #fff !important;
+  box-shadow: 0 4px 15px rgba(255, 46, 147, 0.35);
+}
+
+.bg-light {
+  background-color: rgba(18, 15, 32, 0.6) !important;
+  border: 1px solid var(--glass-border);
+}
+
+.text-muted {
+  color: #928cb3 !important;
+}
+
+.table {
+  color: var(--text-primary);
+  border-color: var(--glass-border);
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+  background-color: rgba(255, 255, 255, 0.01);
+}
+
+.badge {
+  font-family: 'Space Grotesk', sans-serif;
+  letter-spacing: 0.5px;
+}
+
+.badge.bg-success {
+  background: rgba(0, 246, 255, 0.15) !important;
+  color: var(--accent-cyan) !important;
+  border: 1px solid rgba(0, 246, 255, 0.3);
+}
+
+.badge.bg-danger {
+  background: rgba(255, 46, 147, 0.15) !important;
+  color: var(--accent-pink) !important;
+  border: 1px solid rgba(255, 46, 147, 0.3);
+}
+
+.badge.bg-secondary {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: var(--text-secondary) !important;
+  border: 1px solid var(--glass-border);
 }

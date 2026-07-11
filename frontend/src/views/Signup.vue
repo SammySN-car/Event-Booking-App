@@ -1,81 +1,76 @@
-<template>
-  <div class="row justify-content-center align-items-center py-5">
-    <div class="col-md-6">
-      <div class="glass-card p-5">
-        <div class="text-center mb-4">
-          <h2 class="fw-bold">Create Account</h2>
-          <p class="text-muted">Join Event Ticket Booking</p>
-        </div>
-        
-        <form @submit.prevent="handleSignup">
-          <div class="row">
-            <div class="col-md-6 mb-3">
-              <label class="form-label text-secondary small fw-bold">Full Name</label>
-              <input type="text" v-model="form.name" class="form-control form-control-premium py-2" required>
-            </div>
-            <div class="col-md-6 mb-3">
-              <label class="form-label text-secondary small fw-bold">Email address</label>
-              <input type="email" v-model="form.email" class="form-control form-control-premium py-2" required>
-            </div>
-          </div>
-          
-          <div class="row">
-            <div class="col-md-6 mb-3">
-              <label class="form-label text-secondary small fw-bold">Phone</label>
-              <input type="text" v-model="form.phone" class="form-control form-control-premium py-2" required>
-            </div>
-            <div class="col-md-6 mb-3">
-              <label class="form-label text-secondary small fw-bold">Account Type</label>
-              <select v-model="form.role" class="form-control form-control-premium py-2">
-                <option value="user">Standard User</option>
-                <option value="organizer">Event Organizer</option>
-              </select>
-            </div>
-          </div>
-          
-          <div class="mb-4">
-            <label class="form-label text-secondary small fw-bold">Password</label>
-            <input type="password" v-model="form.password" class="form-control form-control-premium py-2" required>
-          </div>
-          
-          <div class="d-grid mb-3">
-            <button type="submit" class="btn btn-premium py-2 fw-bold" :disabled="loading">
-              <span v-if="loading" class="spinner-border spinner-border-sm me-2"></span>
-              Sign Up
-            </button>
-          </div>
-          
-          <div v-if="error" class="alert alert-danger py-2 text-center small mb-0 rounded">{{ error }}</div>
-          <div v-if="success" class="alert alert-success py-2 text-center small mb-0 rounded">{{ success }}</div>
-        </form>
-        <div class="text-center mt-4 pt-3 border-top border-secondary opacity-50">
-          <p class="small text-muted mb-0">Already have an account? <router-link to="/login" class="text-primary fw-bold text-decoration-none">Sign in</router-link></p>
-        </div>
-      </div>
-    </div>
-  </div>
-</template>
 <script setup>
+import axios from 'axios'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import api from '../api/client'
 
+const form = ref({
+    full_name: '',
+    email_id: '',
+    password: '',
+    phone: '',
+    role: 'user'
+})
+const message = ref('')
+const isSuccess = ref(false)
 const router = useRouter()
-const form = ref({ name: '', email: '', phone: '', password: '', role: 'user' })
-const error = ref('')
-const success = ref('')
-const loading = ref(false)
 
-const handleSignup = async () => {
-  error.value = ''; success.value = ''; loading.value = true
-  try {
-    await api.post('/api/signup', form.value)
-    success.value = 'Account created successfully! Redirecting...'
-    setTimeout(() => router.push('/login'), 1500)
-  } catch (err) {
-    error.value = err.response?.data?.message || 'Failed to register'
-  } finally {
-    loading.value = false
-  }
+const register = async () => {
+    try {
+        const response = await axios.post('http://localhost:5000/register', form.value)
+        message.value = response.data.message || 'Registration successful!'
+        isSuccess.value = true
+        setTimeout(() => {
+            router.push('/')
+        }, 1500)
+    } catch (err) {
+        message.value = err.response?.data?.message || 'Registration failed'
+        isSuccess.value = false
+    }
 }
 </script>
+
+<template>
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card shadow">
+                    <div class="card-body p-5">
+                        <h3 class="text-center mb-4">Event Ticket Registration</h3>
+                        <div v-if="message" class="alert" :class="isSuccess ? 'alert-success' : 'alert-danger'" role="alert">
+                            {{ message }}
+                        </div>
+                        <form @submit.prevent="register">
+                            <div class="mb-3">
+                                <label for="full_name" class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="full_name" v-model="form.full_name" required placeholder="Enter your full name">
+                            </div>
+                            <div class="mb-3">
+                                <label for="email_id" class="form-label">Email ID</label>
+                                <input type="email" class="form-control" id="email_id" v-model="form.email_id" required placeholder="Enter your email">
+                            </div>
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="password" v-model="form.password" required placeholder="Create a password">
+                            </div>
+                            <div class="mb-3">
+                                <label for="phone" class="form-label">Phone Number</label>
+                                <input type="text" class="form-control" id="phone" v-model="form.phone" placeholder="Enter phone number">
+                            </div>
+                            <div class="mb-3">
+                                <label for="role" class="form-label">Register As</label>
+                                <select class="form-select" id="role" v-model="form.role">
+                                    <option value="user">User (Book Tickets)</option>
+                                    <option value="organizer">Organizer (Manage Events)</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100 py-2">Register</button>
+                        </form>
+                        <div class="text-center mt-3">
+                            <p>Already have an account? <router-link to="/" class="link-primary text-decoration-none">Login here</router-link></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>

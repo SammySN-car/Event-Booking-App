@@ -1,108 +1,99 @@
-from flask import request
 from flask_restful import Resource
-from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
-from datetime import datetime
+from flask import request
+from flask_jwt_extended import jwt_required,get_jwt_identity
+from backend.utils.db import db
+from backend.models.models import Booking,Seat,Event,Users
+from backend.utils.jwt_utils import organizer_required
+import datetime
 import uuid
-from ..models import db, Booking, Seat, Event
 
-def is_organizer():
-    claims = get_jwt()
-    return claims.get('role') == 'organizer'
-
-class BookingListResource(Resource):
+class BookTicket(Resource):
     @jwt_required()
-    def get(self):
-        user_id = get_jwt_identity()
-        
-        # If user, return their bookings. If organizer, they usually want to see bookings for their events, 
-        # but let's make a separate endpoint or just handle user's bookings here.
-        if is_organizer():
-            # For organizers, return all bookings for their events
-            events = Event.query.filter_by(organizer_id=user_id).all()
-            event_ids = [e.id for e in events]
-            bookings = Booking.query.filter(Booking.event_id.in_(event_ids)).all()
-        else:
-            # For users
-            bookings = Booking.query.filter_by(user_id=user_id).all()
+    def post(self, lot_id):
+        user_id=get_jwt_identity()
+        data=request.get_json()
+        event_id=data.get('event_id')
+        seat_id=data.get('seat_id')
+
+        if not all([event_id,seat_id]):
+            return {'message':'require all details'},400
+
+        event=Event.query.get(event_id)
+        if not event:
+            return {'message':'event not found'},404
+
+        try:
+            current_dt = datetime.datetime.now()
+            event_start_dt = datetime.datetime.strptime(f"{event.date} {event.start_time}", "%Y-%m-%d %H:%M")
+            event_end_dt = datetime.datetime.strptime(f"{event.date} {event.end_time}", "%Y-%m-%d %H:%M")
             
-        result = []
-        for b in bookings:
-            result.append({
-                'id': b.id,
-                'ticket_id': b.ticket_id,
-                'event_name': b.event.name,
-                'date': b.event.date.isoformat(),
-                'seat': f"{b.seat.row}{b.seat.number}",
-                'status': b.status,
-                'user_name': b.user.name if is_organizer() else None
-            })
-        return {'message': 'Bookings retrieved', 'data': result}, 200
+            if current_dt >= event_end_dt:
+                return {'message': 'Event ended'}, 400
+            if current_dt >= event_start_dt:
+                return {'message': 'Event already started. Tickets cannot be booked.'}, 400
+        except ValueError:
+            pass
 
-    @jwt_required()
-    def post(self):
-        user_id = get_jwt_identity()
-        data = request.get_json()
-        
-        event_id = data.get('event_id')
-        seat_id = data.get('seat_id')
+        seat=Seat.query.get(seat_id)
+        if not seat:
+            return {'message':'seat not found'},404
+        if seat.status=='B':
+            return {'message':'seat already booked'},409
 
-        if not event_id or not seat_id:
-            return {'message': 'event_id and seat_id required'}, 400
+        ticket_id='TKT-'+uuid.uuid4().hex[:8].upper()
+        booking_timestamp=datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-        seat = Seat.query.get(seat_id)
-        if not seat or seat.event_id != int(event_id):
-            return {'message': 'Invalid seat'}, 400
-            
-        if seat.status == 'booked':
-            return {'message': 'Seat is already booked'}, 409
-
-        ticket_id = f"TKT-{uuid.uuid4().hex[:8].upper()}"
-
-        booking = Booking(
-            user_id=user_id,
+        booking=Booking(
+            user_id=int(user_id),
             event_id=event_id,
             seat_id=seat_id,
             ticket_id=ticket_id,
-            status='confirmed'
+            booking_timestamp=booking_timestamp
         )
-        
-        seat.status = 'booked'
-        
+        seat.status='B'
         db.session.add(booking)
         db.session.commit()
-        
-        return {
-            'message': 'Ticket booked successfully', 
-            'data': {'ticket_id': ticket_id, 'seat': f"{seat.row}{seat.number}"}
-        }, 201
 
+        return {'message':'ticket booked successfully','ticket_id':ticket_id},201
 
-class BookingResource(Resource):
+class CancelBooking(Resource):
     @jwt_required()
-    def delete(self, booking_id):
-        # Cancellation
-        user_id = get_jwt_identity()
-        booking = Booking.query.get(booking_id)
-        
+    def put(self,reservation_id):
+        booking=Booking.query.get(reservation_id)
         if not booking:
-            return {'message': 'Booking not found'}, 404
+            return {'message':'booking not found'},404
+        if booking.status=='cancelled':
+            return {'message':'already cancelled'},409
 
-        # Allow user to cancel their own, or organizer to cancel
-        if not is_organizer() and booking.user_id != user_id:
-            return {'message': 'Unauthorized'}, 403
-            
-        if is_organizer() and booking.event.organizer_id != user_id:
-            return {'message': 'Unauthorized'}, 403
-
-        if booking.status == 'cancelled':
-            return {'message': 'Already cancelled'}, 409
-
-        booking.status = 'cancelled'
-        
-        # Free up the seat
-        seat = Seat.query.get(booking.seat_id)
-        if seat:
-            seat.status = 'available'
-
+        booking.status='cancelled'
+        seat=Seat.query.get(booking.seat_id)
+        seat.status='A'
         db.session.commit()
-        return {'message': 'Booking cancelled successfully'}, 200
+
+        return {'message':'booking cancelled successfully'},200
+
+class ViewBookings(Resource):
+    @jwt_required()
+    def get(self):
+        user_id=get_jwt_identity()
+        user=Users.query.get(int(user_id))
+
+        if user.role=='organizer':
+            events=Event.query.filter_by(organizer_id=int(user_id)).all()
+            event_ids=[e.id for e in events]
+            bookings=Booking.query.filter(Booking.event_id.in_(event_ids)).all()
+        else:
+            bookings=Booking.query.filter_by(user_id=int(user_id)).all()
+
+        all_bookings=[]
+        for b in bookings:
+            event=Event.query.get(b.event_id)
+            seat=Seat.query.get(b.seat_id)
+            all_bookings.append({
+                'id':b.id,'ticket_id':b.ticket_id,'event_name':event.name if event else 'Unknown',
+                'venue':event.venue if event else '','date':event.date if event else '',
+                'seat':seat.row+str(seat.number) if seat else '','status':b.status,
+                'booking_timestamp':b.booking_timestamp,'user_id':b.user_id
+            })
+
+        return {'message':'here are the details','all_bookings':all_bookings},200
