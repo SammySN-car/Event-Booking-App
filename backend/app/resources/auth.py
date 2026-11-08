@@ -1,3 +1,4 @@
+"""Imports the database object db from the backend.utils.db module. This makes the db object available for use within the auth module. The db object provides access to database functionalities."""
 from backend.utils.db import db
 from flask import request
 from flask_restful import Resource
